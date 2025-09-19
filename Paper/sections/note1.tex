@@ -1,0 +1,33 @@
+\subsection{EU Call Options and the Black-Scholes Model}
+
+Modelling the dynamics of financial markets is a complex task, as markets are influenced by a multitude of factors including economic indicators, investor sentiment, and geopolitical events. For the purpose of pricing financial derivatives, we often rely on simplified mathematical models that capture the essential features of asset price movements. We begin our exploration with the Black-Scholes model for European Call options due to its simplicity and the existence of a closed-form solution, which allows us to benchmark our MCDML methods effectively.
+
+The underlying asset (a stock) is assumed to follow a geometric Brownian motion (GBM), which is a continuous-time stochastic process, defined by the Stochastic Differential Equation (SDE):
+\begin{align*}
+    dS_t = \mu S_t dt + \sigma S_t dW_t,
+\end{align*}
+where $S_t$ is the stock price at time $t$, $\mu$ is the drift (expected growth rate), $\sigma$ is the volatility and $W_t$ is a Brownian motion ((normal) random shocks). So, the stock drifts upward with a rate of $\mu$ but is also subject at every instant to random fluctuations due to $\sigma S_t dW_t$ term.
+
+The solution to this SDE is,
+\begin{align*}
+    S_t = S_0 \exp\left( \left(\mu - \frac{\sigma^2}{2}\right)t + \sigma W_t \right).
+\end{align*}
+
+From here one can show that at a fixed time $T$, the stock price $S_T$ is lognormal, 
+\begin{align*}
+    S_T = S_0 \exp\left( \left(\mu - \frac{\sigma^2}{2}\right)T + \sigma \sqrt{T} Z \right), \quad Z \sim N(0,1).
+\end{align*}
+
+Which is the well-known Black-Scholes assumption. 
+
+Now, an Option, is a financial derivative that gives the holder the right, but not the obligation, to buy or sell an asset at a specified price (the strike price) on or before a specified date (the expiration date). An European Call Option is a type of option that gives the holder the right to buy an asset at a specified strike price only on the expiration/maturity date. So, the payoff at maturity is, 
+\begin{align*}
+    \Pi = \max(S_T - K, 0),
+\end{align*}
+where $K$ is the strike price. If the stock ends up above the strike price, the option is exercised and the holder makes a profit of $S_T - K$. If the stock ends up below the strike price, the option is not exercised and the payoff is zero - "thrown away".
+
+In finance, the "fair price" today of such an Option, is the discounted expected payoff under the risk-neutral measure $\mathbb{Q}$,
+\begin{align} \label{eq:bs_price}
+    C_0 = e^{-rT} \mathbb{E}^{\mathbb{Q}}[\Pi] = e^{-rT} \mathbb{E}^{\mathbb{Q}}[\max(S_T - K, 0)],
+\end{align}
+where $r$ is the risk-free interest rate. Which simply states, that the future payoff is random, and discounted back to present value, and the expectation is taken over all random paths.  

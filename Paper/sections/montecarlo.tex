@@ -1,0 +1,38 @@
+\section{Monte Carlo Estimator}
+
+The problem that arises, is that we oftent cant compute \eqref{eq:bs_price} analytically. So instead, we simulate.
+
+\begin{algorithm}[H] \label{alg:mc_bs_european_call}
+\caption{Crude Monte Carlo for European Call Option Pricing}
+\begin{algorithmic}[1]
+\State \textbf{Input:} Initial stock price $S_0$, strike price $K$, time to maturity $T$, risk-free rate $r$, volatility $\sigma$, number of simulations $N$.
+\State \textbf{Output:} Estimated option price $\hat{C}_N$
+\For{$i = 1$ to $N$}
+    \State Generate $Z_i \sim N(0,1)$
+    \State Compute stock price at maturity: $S_T^{(i)} = S_0 \exp((r-0.5\sigma^2)T+\sigma \sqrt{T}Z_i)$
+    \State Compute payoff: $\Pi^{(i)} = e^{-rT} \max(S_T^{(i)} - K, 0)$
+\EndFor
+\State Compute estimated option price: $\hat{C}_N = \frac{1}{N} \sum_{i=1}^{N} \Pi^{(i)}$
+\State \textbf{Return} $\hat{C}_N$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Variance Reduction Techniques}
+
+One problem regarding Monte Carlo, is noise, since we are averaging random numbers. It can be shown that the MC estimator for a R.V. $Z$, defined on the probability space $(\Omega, \mathcal{F}, \mathbb{P})$, with finite variance $\sigma^2 = \text{Var}(Z) < \infty$, is unbiased, $\mathbb{E}[\hat{Z}_N] = \mathbb{E}[Z]$, and that a CLT applies for $N \to \infty$, such that the sample mean converges to a normal distribution with mean $z$ and standard error $\sigma/\sqrt{N}$. From here, it is clear the standard error, converges towards zero at a rate of $\sqrt{N}$. So to halve the standard error, we need to increase the number of simulations by a factor of 4. This can be computationally expensive, and so variance reduction techniques are often used to reduce the variance $\sigma^2$ of the estimator, and thereby improve precision without having to increase $N$. 
+
+In this paper, we will use two simple variance reduction techniques, Antithetic Variates and Control Variates.
+
+\subsubsection{Antithetic Variates}
+If the randomness is symmetric, we can use opposites. So instead of simulating one $Z \sim N(0,1)$, we simulate two, $Z$ and $-Z$. The paths from these two draws are negatively correlated, and averaging them cancels out some of the noise. 
+
+\subsubsection{Control Variates}
+Say we want to estimate $E(X)$ but that $X$ is noisy. We also observe another (related) variable $Y$, for which we know $E(Y)$. If $X$ and $Y$ are correlated, we can use $Y$ to reduce the noise in our estimate of $E(X)$. The idea is to consider the new variable,
+\begin{align*}
+    X' = X - \beta(Y - E(Y)),
+\end{align*}
+Now, we don't know the Option price exactly, but we do know the expectation of the underlying stock price itself, $E(S_T) = S_0 e^{rT}$. So we can use the stock price as a control variate.   
+
+\subsection{ML Angle}
+
+Monte Carlo is accurate, but slow (especially at high precision). Say we want Option prices for many different parameters (e.g. $S_0, K, T, r, \sigma$), the idea is then to use Machine Learning to learn the mapping from model parameters (e.g. $S_0, K, T, r, \sigma$) to Option prices. This is a regression problem, where we want to learn a function $f: \mathbb{R}^5 \to \mathbb{R}$, that maps the 5 input parameters to the Option price. Without ML, we would have to rerun the simulation for each new set of parameters. With ML, we can train a model on a large dataset of simulated Option prices, and then use the trained model to predict Option prices for new sets of parameters almost instantly. 
